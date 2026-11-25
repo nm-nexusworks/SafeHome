@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>SafeHome 3D | Visor de producto</title>
+  <meta name="description" content="Visualizador interactivo 3D del prototipo SafeHome. Prototipo visual con lecturas simuladas; no es un detector certificado ni un dispositivo de protección.">
+  <meta name="theme-color" content="#12161b">
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Open+Sans:wght@700&display=swap">
+  <link rel="stylesheet" href="./safehome.css">
+  
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="stage" id="stage">
+  <div class="top">
+    <div class="brand"><b>SafeHome</b><span>Prototipo 3D · configurador interactivo</span></div>
+    <div class="hint">Arrastra para girar · rueda o pellizco para acercar · doble clic para volver</div>
+  </div>
+  <div class="safety-banner" role="note" aria-label="Aviso de seguridad">
+    <strong>PROTOTIPO VISUAL · NO ES UN DISPOSITIVO DE SEGURIDAD.</strong>
+    <span>No es un detector certificado ni protege a personas. Las lecturas y estados son simulados; no lo uses para detectar CO ni como protección.</span>
+  </div>
+  <div class="viewer-status" id="viewerStatus" role="status" aria-live="polite">Iniciando visor 3D…</div>
+  <div class="toolbar" role="group" aria-label="Herramientas del visor 3D">
+    <details class="more-options" id="moreOptions">
+      <summary class="tool-btn" id="moreOptionsSummary">Más opciones</summary>
+      <div class="more-options-menu">
+        <div class="wall-picker">
+          <label for="wallStyle">Pared</label>
+          <select id="wallStyle" aria-label="Cambiar material de la pared">
+            <option value="slate" selected>Pizarra oscura</option>
+            <option value="white">Blanco liso</option>
+            <option value="wood">Madera natural</option>
+            <option value="brick">Ladrillo</option>
+            <option value="concrete">Hormigón</option>
+            <option value="sage">Verde suave</option>
+            <option value="tile">Cerámica clara</option>
+          </select>
+        </div>
+        <div class="light-picker">
+          <label for="lightStyle">Luz</label>
+          <select id="lightStyle" aria-label="Elegir iluminación">
+            <option value="studio" selected>Estudio</option>
+            <option value="warm">Cálida</option>
+            <option value="cool">Fría</option>
+          </select>
+        </div>
+        <button class="tool-btn" id="autoRotate" type="button" aria-pressed="false">Giro automático</button>
+        <button class="tool-btn" id="resetView" type="button">Restablecer vista</button>
+        <button class="tool-btn" id="captureView" type="button">Guardar imagen</button>
+        <button class="tool-btn" id="fullscreen" type="button" aria-label="Activar pantalla completa">Pantalla completa</button>
+      </div>
+    </details>
+    <button class="tool-btn" id="switchDevice" type="button">Ver Nexo CO</button>
+    <button class="tool-btn" id="openComponents" type="button" aria-haspopup="dialog" aria-controls="componentsDialog">Ver circuito interno</button>
+  </div>
+  <div class="notice" id="notice" role="status" aria-live="polite"></div>
+  <div class="bottom">
+    <div class="caption" aria-live="polite"><span class="k" id="capK"></span><p id="capT"></p></div>
+    <div class="views" id="views" role="group" aria-label="Vistas de la carcasa">
+      <button class="chip" type="button" data-view="front" aria-pressed="false">Frente</button>
+      <button class="chip" type="button" data-view="l34" aria-pressed="false">3/4 izquierda</button>
+      <button class="chip" type="button" data-view="r34" aria-pressed="false">3/4 derecha</button>
+      <button class="chip" type="button" data-view="left" aria-pressed="false">Lado izquierdo</button>
+      <button class="chip" type="button" data-view="right" aria-pressed="false">Lado derecho</button>
+      <button class="chip" type="button" data-view="top" aria-pressed="false">Superior</button>
+      <button class="chip" type="button" data-view="bottom" aria-pressed="false">Inferior</button>
+      <button class="chip" type="button" data-view="back" aria-pressed="false">Reverso</button>
+    </div>
+  </div>
+  <div class="tip" id="tip" hidden></div>
+  <div class="components-backdrop" id="componentsBackdrop" hidden></div>
+  <section class="components-panel" id="componentsDialog" role="dialog" aria-modal="false" aria-labelledby="componentsTitle" tabindex="-1" hidden>
+    <header class="components-head">
+      <div><span class="components-eyebrow">CIRCUITO INTERNO · INTERACTIVO</span><h2 id="componentsTitle">Equipo central</h2><p>Toca cualquier pieza o cable en el modelo 3D, o elígela aquí. Cambia entre el equipo central y el Nexo CO.</p></div>
+      <button class="components-close" id="closeComponents" type="button" aria-label="Cerrar panel">×</button>
+    </header>
+    <div class="sim-row" role="group" aria-label="Equipo a explorar">
+      <span class="sim-label">Equipo</span>
+      <button class="sim-btn" type="button" data-device="central" aria-pressed="true">Central</button>
+      <button class="sim-btn" type="button" data-device="nexo" aria-pressed="false">Nexo CO</button>
+    </div>
+    <div class="sim-row" role="group" aria-label="Simular estado del sistema">
+      <span class="sim-label">Simular</span>
+      <button class="sim-btn" type="button" data-sim="normal" aria-pressed="true">Normal</button>
+      <button class="sim-btn" type="button" data-sim="prevencion" aria-pressed="false">Prevención</button>
+      <button class="sim-btn" type="button" data-sim="alerta" aria-pressed="false">Alerta</button>
+    </div>
+    <div class="sim-row" role="group" aria-label="Opciones de visualización">
+      <button class="sim-btn" id="toggleFlow" type="button" aria-pressed="true">Flujo de señal</button>
+      <button class="sim-btn" id="toggleShell" type="button" aria-pressed="true">Carcasa translúcida</button>
+    </div>
+    <div class="component-list" id="componentList" aria-label="Lista de componentes"></div>
+    <article class="component-detail" aria-live="polite"><span class="detail-tag" id="detailTag">COMPONENTE 01</span><h3 id="detailName">ESP32</h3><p id="detailDescription"></p><div class="detail-why"><b>¿Por qué se implementó?</b><p id="detailWhy"></p></div><div class="detail-why"><b>Conexiones y pines</b><p id="detailConn"></p></div></article>
+    <footer class="components-footer"><span>Montaje ilustrativo · ADC simulado con los umbrales del código (700 / 1000) · pines nuevos son propuestas</span></footer>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./safehome.js"></script>
+
+</body></html>
