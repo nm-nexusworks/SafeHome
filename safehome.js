@@ -417,16 +417,12 @@
       sp.scale.set(0.9, 0.9, 1); sp.position.set(x, y, z);
       return sp;
     }
-    function symbolTex(kind) {
+    function muteTex() {
       var c = mk(128, 128), x = c.getContext('2d');
       x.fillStyle = '#c9c9c9'; x.fillRect(0, 0, 128, 128);
       x.fillStyle = '#111'; x.strokeStyle = '#111'; x.lineWidth = 9; x.lineCap = 'round';
-      if (kind === 'minus') { x.fillRect(34, 58, 60, 12); }
-      else if (kind === 'plus') { x.fillRect(34, 58, 60, 12); x.fillRect(58, 34, 12, 60); }
-      else {
-        x.beginPath(); x.moveTo(30, 52); x.lineTo(50, 52); x.lineTo(74, 32); x.lineTo(74, 96); x.lineTo(50, 76); x.lineTo(30, 76); x.closePath(); x.fill();
-        x.beginPath(); x.moveTo(86, 48); x.lineTo(108, 80); x.moveTo(108, 48); x.lineTo(86, 80); x.stroke();
-      }
+      x.beginPath(); x.moveTo(30, 52); x.lineTo(50, 52); x.lineTo(74, 32); x.lineTo(74, 96); x.lineTo(50, 76); x.lineTo(30, 76); x.closePath(); x.fill();
+      x.beginPath(); x.moveTo(86, 48); x.lineTo(108, 80); x.moveTo(108, 48); x.lineTo(86, 80); x.stroke();
       return tex(c, true);
     }
 
@@ -673,7 +669,7 @@
         var BO = { x: -2.2, y: -0.55, z: 0.08 }, SW = { x: -2.95, y: -0.3, z: 0.1 }, LR = { x: -0.9, y: -0.85, z: 0.12 };
         var MQC = { x: -2.35, y: 0.95, z: 0.05, sc: 0.72 };
         var CH = { x: 2.85, y: 0.4, z: 0.0 }, UB = { x: 2.55, y: -1.25, z: 0.0 }, BA = { x: 0.35, y: -0.82, z: -0.42 };
-        var RES_X = [-0.35, 0, 0.35], BTN_X = [1.0, 1.635, 2.27];
+        var RES_X = [-0.35, 0, 0.35], MUTE_X = 1.635;
         var BP = [[1.45, -0.65, -0.25], [1.45, -0.98, -0.25]];
 
         deco(new THREE.BoxGeometry(5.9, 2.9, 0.04), '#1d3532', 0, 0, PLATE_Z, 0.78);
@@ -693,13 +689,12 @@
         });
         post(-0.6, 1.0, 0.1); post(0.6, 1.0, 0.1);
 
+        // Un único pulsador de muteo en la cara superior, centrado sobre la pantalla.
         partGroup('buttons');
-        BTN_X.forEach(function (bx, k) {
-          solid('buttons', new THREE.BoxGeometry(0.38, 0.24, 0.38), '#22272b', bx, 1.42, 0.2, 0.35);
-          solid('buttons', new THREE.CylinderGeometry(0.1, 0.1, 0.16, 20), k === 1 ? '#1496b4' : '#bdbdbd', bx, 1.55, 0.2, 0.35);
-          solid('buttons', new THREE.BoxGeometry(0.04, 0.1, 0.04), '#d7c66a', bx - 0.12, 1.3, 0.2, 0.35, 0.6);
-          solid('buttons', new THREE.BoxGeometry(0.04, 0.1, 0.04), '#d7c66a', bx + 0.12, 1.3, 0.2, 0.35, 0.6);
-        });
+        solid('buttons', new THREE.BoxGeometry(0.38, 0.24, 0.38), '#22272b', MUTE_X, 1.42, 0.2, 0.35);
+        solid('buttons', new THREE.CylinderGeometry(0.1, 0.1, 0.16, 20), '#1496b4', MUTE_X, 1.55, 0.2, 0.35);
+        solid('buttons', new THREE.BoxGeometry(0.04, 0.1, 0.04), '#d7c66a', MUTE_X - 0.12, 1.3, 0.2, 0.35, 0.6);
+        solid('buttons', new THREE.BoxGeometry(0.04, 0.1, 0.04), '#d7c66a', MUTE_X + 0.12, 1.3, 0.2, 0.35, 0.6);
 
         // Parlantes y amplificador
         partGroup('speakers'); partGroup('amp');
@@ -786,11 +781,9 @@
           addWire(d[0], ['rgb', 'resistors', 'esp32'], [[rx, 0.89, 0.15], [rx, 0.82, 0.12], [p[0], 0.76, 0.05], p]);
         });
         addWire('black', ['rgb', 'esp32'], [[-0.02, 1.26, 0.12], [-0.02, 1.34, -0.02], [-0.66, 1.34, -0.02], [-0.66, 0.8, -0.02], padW(8, 'T')]);
-        [[0, 'blue', 1.22, 1], [1, 'green', 1.17, 2], [2, 'yellow', 1.12, 3]].forEach(function (d) {
-          var bx = BTN_X[d[0]], p = padW(d[3], 'T');
-          addWire(d[1], ['buttons', 'esp32'], [[bx - 0.12, 1.26, 0.2], [bx - 0.12, d[2], -0.08], [p[0], d[2], -0.08], p]);
-        });
-        addWire('black', ['buttons', 'esp32'], [[BTN_X[2] + 0.12, 1.26, 0.2], [BTN_X[2] + 0.12, 1.07, -0.08], [padW(4, 'T')[0], 1.07, -0.08], padW(4, 'T')]);
+        // Señal de muteo y tierra del único pulsador; GPIO4 es el pin previsto.
+        addWire('green', ['buttons', 'esp32'], [[MUTE_X - 0.12, 1.26, 0.2], [MUTE_X - 0.12, 1.17, -0.08], [padW(2, 'T')[0], 1.17, -0.08], padW(2, 'T')]);
+        addWire('black', ['buttons', 'esp32'], [[MUTE_X + 0.12, 1.26, 0.2], [MUTE_X + 0.12, 1.07, -0.08], [padW(4, 'T')[0], 1.07, -0.08], padW(4, 'T')]);
         // Amplificador -> ESP32 y parlantes
         route('grey', ['amp', 'esp32'], [AMP.x - 0.24 + 2 * 0.16, AMP.y + 0.27, AMP.z + 0.03], padW(5, 'T'), AMP.x - 0.24 + 2 * 0.16, 0.12);
         route('grey', ['amp', 'esp32'], [AMP.x - 0.24 + 3 * 0.16, AMP.y + 0.27, AMP.z + 0.03], padW(6, 'T'), AMP.x - 0.24 + 3 * 0.16, 0.16);
@@ -805,25 +798,23 @@
 
         // ---- Exterior ----
         ledExterior(0, H / 2, 0.15);
-        BTN_X.forEach(function (bx, k) {
-          var g = new THREE.Group(); g.position.set(bx, H / 2, 0.2);
-          var ringM = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 32), new THREE.MeshStandardMaterial({ color: srgb(k === 1 ? '#1496b4' : '#14181c'), roughness: 0.4, metalness: 0.2, emissive: srgb(k === 1 ? '#0a4f61' : '#000000'), emissiveIntensity: 0.5 }));
-          ringM.position.y = 0.005;
-          var capM = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.08, 32), new THREE.MeshStandardMaterial({ color: srgb('#bdbdbd'), roughness: 0.42, metalness: 0.1 }));
-          capM.position.y = 0.05;
-          var sym = new THREE.Mesh(new THREE.CircleGeometry(0.15, 32), new THREE.MeshBasicMaterial({ map: symbolTex(['minus', 'mute', 'plus'][k]), toneMapped: false }));
-          sym.rotation.x = -Math.PI / 2; sym.position.y = 0.092;
-          [ringM, capM].forEach(function (m) { m.castShadow = true; });
-          g.add(ringM); g.add(capM); g.add(sym);
-          extGroup.add(g); extHide.push(g);
-        });
+        var muteButton = new THREE.Group(); muteButton.position.set(MUTE_X, H / 2, 0.2);
+        var muteRing = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 32), new THREE.MeshStandardMaterial({ color: srgb('#1496b4'), roughness: 0.4, metalness: 0.2, emissive: srgb('#0a4f61'), emissiveIntensity: 0.5 }));
+        muteRing.position.y = 0.005;
+        var muteCap = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.08, 32), new THREE.MeshStandardMaterial({ color: srgb('#bdbdbd'), roughness: 0.42, metalness: 0.1 }));
+        muteCap.position.y = 0.05;
+        var muteSymbol = new THREE.Mesh(new THREE.CircleGeometry(0.15, 32), new THREE.MeshBasicMaterial({ map: muteTex(), toneMapped: false }));
+        muteSymbol.rotation.x = -Math.PI / 2; muteSymbol.position.y = 0.092;
+        [muteRing, muteCap].forEach(function (m) { m.castShadow = true; });
+        muteButton.add(muteRing); muteButton.add(muteCap); muteButton.add(muteSymbol);
+        extGroup.add(muteButton); extHide.push(muteButton);
         usbSlot(UB.x, -H / 2, 0.0);
         var chl = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 20), new THREE.MeshStandardMaterial({ color: srgb('#ff3b3b'), emissive: srgb('#ff3b3b'), emissiveIntensity: 0.9, roughness: 0.3 }));
         chl.position.set(1.9, -H / 2, 0); extGroup.add(chl);
         redButton(-W / 2, SW.y, 0, Math.PI / 2);   // botón de apagado en el lado izquierdo
 
         badge('esp32', -0.75, 0.25, 0.3); badge('sensor', -1.83, 1.02, 0.52); badge('oled', OL.x, OL.y, 0.75); badge('rgb', 0.0, 1.62, 0.45);
-        badge('resistors', -0.7, 1.08, 0.35); badge('buttons', BTN_X[1], 1.55, 0.6);
+        badge('resistors', -0.7, 1.08, 0.35); badge('buttons', MUTE_X, 1.55, 0.6);
         badge('speakers', SP[0][0], SP[0][1], 0.65); badge('speakers', SP[1][0], SP[1][1], 0.65);
         badge('amp', AMP.x, AMP.y, 0.35); badge('lora', LR.x, LR.y, 0.4); badge('ble', 0.3, 0.66, 0.2);
         badge('usbc', UB.x, UB.y, 0.3);
@@ -1229,7 +1220,7 @@
       right: { label: 'Lado derecho', th: 1.3, ph: 1.55, zoom: 0.86, det: 0,
         text: 'Ícono de casa con Wi-Fi arriba y rejillas de ventilación abajo.' },
       top: { label: 'Superior', th: -0.25, ph: 0.62, zoom: 0.95, det: 0,
-        text: 'LED RGB al centro, botones de volumen − / silencio / volumen + sobre la pantalla y rejillas de ventilación a los lados.' },
+        text: 'LED RGB al centro, un único botón de muteo turquesa sobre la pantalla y rejillas de ventilación a los lados.' },
       bottom: { label: 'Inferior', th: -0.25, ph: 2.25, zoom: 0.95, det: 0,
         text: 'Puerto de carga USB-C con su LED rojo indicador de carga.' },
       back: { label: 'Reverso', th: 0, ph: Math.PI / 2, zoom: 1, det: 1,
@@ -1315,14 +1306,14 @@
 
     // ---------- explorador interactivo del circuito ----------
     var componentData = {
-      esp32:{name:'ESP32',tag:'UNIDAD DE CONTROL',description:'Es el cerebro de SafeHome. En el equipo central lee su propio MQ-7 y coordina el Nexo CO por Bluetooth; también controla el LED RGB, los parlantes, la pantalla, el LoRa y los botones. En el Nexo CO, el ESP32 lee el segundo MQ-7 y envía su estado al central.',why:'Integra procesamiento, WiFi y Bluetooth en una sola placa. El Bluetooth del propio ESP32 permite enlazar los equipos sin añadir otro módulo.',conn:'Central: salida AOUT del MQ-7 a GPIO34 (con adaptación de nivel), pantalla I2C (SDA 18, SCL 22), LED RGB (R 19, G 23, B 21), parlantes (16 y 17) y silencio en GPIO4. Pines por definir (propuesta): vol− 25, vol+ 26 y LoRa por SPI alternativo (SCK 14, MISO 12, MOSI 13, NSS 5, RST 27, DIO0 32), porque el SPI por defecto usa GPIO18, que ya ocupa la pantalla.'},
+      esp32:{name:'ESP32',tag:'UNIDAD DE CONTROL',description:'Es el cerebro de SafeHome. En el equipo central lee su propio MQ-7 y coordina el Nexo CO por Bluetooth; también controla el LED RGB, los parlantes, la pantalla, el LoRa y el botón de muteo. En el Nexo CO, el ESP32 lee el segundo MQ-7 y envía su estado al central.',why:'Integra procesamiento, WiFi y Bluetooth en una sola placa. El Bluetooth del propio ESP32 permite enlazar los equipos sin añadir otro módulo.',conn:'Central: salida AOUT del MQ-7 a GPIO34 (con adaptación de nivel), pantalla I2C (SDA 18, SCL 22), LED RGB (R 19, G 23, B 21), parlantes (16 y 17) y muteo en GPIO4. LoRa por SPI alternativo (SCK 14, MISO 12, MOSI 13, NSS 5, RST 27, DIO0 32), porque el SPI por defecto usa GPIO18, que ya ocupa la pantalla.'},
       sensor:{name:'Sensor de monóxido de carbono MQ-7',tag:'DETECCIÓN',description:'SafeHome incorpora dos sensores MQ-7: uno en la central y otro en el Nexo CO. Cada salida analógica se conecta al ESP32 local por GPIO34, con adaptación de nivel, y se compara con umbrales de simulación. El MQ-7 requiere calibración en el entorno de uso y un ciclo de calefacción controlado para obtener mediciones confiables; una lectura sin ese ciclo no debe tratarse como medición válida.',why:'La central mide CO en su propia ubicación y recibe además el estado del sensor remoto del Nexo CO.',conn:'Cada MQ-7 va a 5 V/GND común y AOUT a GPIO34 del ESP32 de su equipo, mediante adaptación/divisor para no superar el máximo admitido por el ADC. El calefactor requiere ciclo de alta/baja tensión, alimentación dimensionada y calibración con el módulo real.'},
       oled:{name:'Pantalla OLED del equipo central',tag:'INTERFAZ',description:'Muestra el estado, la lectura ADC y una barra con marcas de umbral. En el equipo central también indica cuántos Nexo CO hay conectados. El Nexo CO no incorpora pantalla.',why:'Entrega información inmediata sin depender de un teléfono ni de Internet.',conn:'Alimentación, tierra y bus I2C (SDA 18, SCL 22). Usa «Simular» para ver los tres estados.'},
       rgb:{name:'LED RGB',tag:'INDICADOR DE ESTADO',description:'Un único LED de tres colores reemplaza a los tres LEDs: verde en NORMAL, amarillo (rojo + verde) en PRE-ALERTA y rojo en ALERTA. Parpadea en alerta. Está en la cara superior de ambos equipos.',why:'Ahorra espacio y pines, y permite más colores, por ejemplo azul para emparejando Bluetooth.',conn:'Cátodo común a GND y tres canales con su resistencia en serie: rojo GPIO19, verde GPIO23, azul GPIO21 (en el central; en el Nexo CO las resistencias van en el mismo LED).'},
       resistors:{name:'Resistencias',tag:'PROTECCIÓN',description:'Una resistencia por cada canal del LED RGB limita la corriente.',why:'Evitan sobrecorriente en el LED y en los pines del ESP32.',conn:'En serie entre cada pin de salida y su canal del LED RGB.'},
-      buttons:{name:'Botones: volumen y silencio',tag:'ENTRADA MANUAL',description:'Tres pulsadores en la cara superior del central, encima de la pantalla: volumen − (izquierda), silencio (centro, anillo turquesa) y volumen + (derecha).',why:'El silencio queda visible y accesible; los de volumen ajustan los parlantes sin reprogramar.',conn:'Cada botón va a un pin con pull-up interno y a GND. Silencio en GPIO4 (como en el código actual); vol− y vol+ en pines nuevos (propuesta: 25 y 26).'},
-      speakers:{name:'Parlantes',tag:'ALERTA SONORA',description:'Dos parlantes inferiores con rejilla perforada, uno a la izquierda y otro a la derecha; tienen el mismo diámetro y están alineados a la misma altura. Reemplazan a los zumbadores. En PRE-ALERTA y ALERTA el parlante local puede emitir patrones sonoros diferenciados según el estado.',why:'Un parlante da un sonido más fuerte y claro que un zumbador. Como no se puede conectar directo al ESP32, va con un amplificador.',conn:'Las señales salen de GPIO16 y GPIO17, pasan por el amplificador y de ahí a cada parlante (cables rojo y negro). El volumen de los botones se regula en el código.'},
-      amp:{name:'Amplificador de audio',tag:'AUDIO',description:'Módulo amplificador clase D (tipo PAM8403) de dos canales que alimenta a los parlantes.',why:'El ESP32 no entrega la corriente que necesita un parlante; el amplificador la suministra y permite subir el volumen.',conn:'Entradas de audio desde GPIO16 y GPIO17, salida a los dos parlantes y alimentación de 5 V desde el elevador.'},
+      buttons:{name:'Botón de muteo (silencio)',tag:'ENTRADA MANUAL',description:'Un único pulsador en la cara superior del equipo central, centrado sobre la pantalla y marcado con un anillo turquesa. Permite silenciar temporalmente las alertas sonoras.',why:'Deja a mano una única acción de silencio, sin controles físicos para subir o bajar el volumen.',conn:'El pulsador se conecta con pull-up interno al GPIO4 y a GND.'},
+      speakers:{name:'Parlantes',tag:'ALERTA SONORA',description:'Dos parlantes inferiores con rejilla perforada, uno a la izquierda y otro a la derecha; tienen el mismo diámetro y están alineados a la misma altura. Reemplazan a los zumbadores. En PRE-ALERTA y ALERTA el parlante local puede emitir patrones sonoros diferenciados según el estado.',why:'Un parlante da un sonido más fuerte y claro que un zumbador. Como no se puede conectar directo al ESP32, va con un amplificador.',conn:'Las señales salen de GPIO16 y GPIO17, pasan por el amplificador y de ahí a cada parlante (cables rojo y negro). El botón de muteo permite silenciar temporalmente las alertas sonoras.'},
+      amp:{name:'Amplificador de audio',tag:'AUDIO',description:'Módulo amplificador clase D (tipo PAM8403) de dos canales que alimenta a los parlantes.',why:'El ESP32 no entrega la corriente que necesita un parlante; el amplificador la suministra para reproducir las alertas.',conn:'Entradas de audio desde GPIO16 y GPIO17, salida a los dos parlantes y alimentación de 5 V desde el elevador.'},
       lora:{name:'Módulo LoRa 915 MHz',tag:'LARGO ALCANCE',description:'Radio LoRa (tipo SX1276 / RFM95W) para enviar alertas a larga distancia, más allá del alcance del Bluetooth, hacia otro receptor LoRa.',why:'Permite avisar a una pasarela o a otro equipo situado lejos del hogar sin depender de WiFi. En Chile se usa la banda de 915 MHz.',conn:'Bus SPI con el ESP32 (3V3, GND, SCK, MISO, MOSI, NSS, además de RST y DIO0). Requiere antena (la varilla dorada). Hay que usar SPI alternativo porque GPIO18 lo ocupa la pantalla.'},
       ble:{name:'Bluetooth (BLE)',tag:'COMUNICACIÓN',description:'El ESP32 trae Bluetooth integrado. El equipo central se conecta al Nexo CO, que le envía el estado de detección de CO y notifica los cambios.',why:'Amplía la cobertura a varias habitaciones sin cableado. Límite técnico: el ESP32 clásico admite hasta 9 conexiones BLE simultáneas según la guía de Espressif, por lo que 10 dispositivos no es alcanzable con esta placa.',conn:'Usa la antena del propio módulo ESP32, sin cables. Para pasar de 9 habría que usar dos centrales u otra placa.'},
                   usbc:{name:'Cargador USB-C',tag:'CARGA',description:'Módulo de carga (tipo TP4056 con protección) conectado al puerto USB-C de la cara inferior. Un LED rojo junto al puerto indica carga.',why:'Permite recargar la batería con un cargador de celular normal. Está presente en ambos equipos.',conn:'Entrada: USB-C de 5 V. Salida: terminales positivo (rojo) y negativo (negro) de la batería.'},
@@ -1342,7 +1333,7 @@
       if (deviceKey === 'nexo' && SAT_DATA[key]) Object.keys(SAT_DATA[key]).forEach(function (k) { d[k] = SAT_DATA[key][k]; });
       return d;
     }
-    var SUBS = { esp32: 'Unidad de control', sensor: 'Detección de monóxido de carbono', oled: 'Información del sistema', rgb: 'Normal · Pre-alerta · Alerta', resistors: 'Protección del LED', buttons: 'Vol − · Silencio · Vol +', speakers: 'Alerta sonora local', amp: 'Amplificador de audio', lora: 'Largo alcance 915 MHz', ble: 'Hasta 9 conexiones', usbc: 'Carga por USB-C', power: 'Apagado + elevador 5 V', battery: 'Autonomía', wires: 'Conexiones' };
+    var SUBS = { esp32: 'Unidad de control', sensor: 'Detección de monóxido de carbono', oled: 'Información del sistema', rgb: 'Normal · Pre-alerta · Alerta', resistors: 'Protección del LED', buttons: 'Muteo / silencio', speakers: 'Alerta sonora local', amp: 'Amplificador de audio', lora: 'Largo alcance 915 MHz', ble: 'Hasta 9 conexiones', usbc: 'Carga por USB-C', power: 'Apagado + elevador 5 V', battery: 'Autonomía', wires: 'Conexiones' };
     var componentsDialog = document.getElementById('componentsDialog');
     var componentsBackdrop = document.getElementById('componentsBackdrop');
     var openComponents = document.getElementById('openComponents');
